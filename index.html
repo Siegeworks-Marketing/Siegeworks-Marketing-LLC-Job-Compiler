@@ -5,9 +5,9 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com https://api.adzuna.com 'unsafe-inline' 'unsafe-eval'; connect-src https://www.themuse.com https://remotive.com https://jobicy.com https://api.allorigins.win https://corsproxy.io https://www.indeed.com https://jsearch.p.rapidapi.com; img-src 'self' data:; style-src 'self' 'unsafe-inline'; frame-ancestors 'none';">
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Siegeworks | Job Search</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js" integrity="sha512-dv/5WzijjzOI9GrOjpi/V8N8u3XcuIN93BZMS1JM5U6XIpX1bo2G88q3rc3801lbSyc+D/HBIkCN6upGiRw8eQ==" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js" integrity="sha512-1F4vmAUJi4eq+QfyF0EuBi5EWK3RHSwOFb15HKzZ3CfPHEw6Eg6NGQhnqqRetuMvRXPOT4JfcedhbaSbQnR8OQ==" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js" integrity="sha512-ND11pbmp3M3Wldj90In1EUlHIt8T7O6FykizQ/yXrFjHtpX+D0SX+/IVeLjqAV91r/Lavq4BpWJIC0nUtw5Kvw==" crossorigin="anonymous"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:#0D0D0D;color:#fff;font-family:system-ui,"Helvetica Neue",sans-serif}
@@ -392,7 +392,7 @@ function ApiCard({title,badge,sub,link,fields,saved,onSave,onClear,accentColor="
     </div>
     {open&&<div style={{display:"flex",flexDirection:"column",gap:10,marginTop:4}}>
       {fields.map(f=><TInput key={f.key} label={f.label} secret={f.secret} placeholder={f.placeholder} value={vals[f.key]} onChange={v=>upd(f.key,v)}/>)}
-      <div style={{fontSize:"0.73rem",color:"#6B7280",background:C.mid,borderRadius:5,padding:"0.55rem 0.75rem",lineHeight:1.5}}>⚠ Keys stored in browser localStorage only. Visible in DevTools. Read-only job search — no billing risk from search usage. Never sent to any external server by this tool.</div>
+      <div style={{fontSize:"0.73rem",color:"#6B7280",background:C.mid,borderRadius:5,padding:"0.55rem 0.75rem",lineHeight:1.5}}>⚠ Keys are saved in this browser only and never sent to any server by this tool. However, anyone with access to this browser could find them. Do not enter keys on a shared or work computer.</div>
       <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
         <RedBtn onClick={()=>{onSave(fields.reduce((acc,f)=>({...acc,[f.key]:vals[f.key].trim()}),{}));setOpen(false);}} disabled={!allFilled}>Save</RedBtn>
         {saved&&<button onClick={()=>{onClear();setVals(Object.fromEntries(fields.map(f=>[f.key,""])));setOpen(false);}} style={{padding:"0.4rem 0.85rem",borderRadius:5,fontSize:"0.78rem",cursor:"pointer",border:"1px solid #8B1A1A55",background:"transparent",color:"#F87171"}}>Remove</button>}
