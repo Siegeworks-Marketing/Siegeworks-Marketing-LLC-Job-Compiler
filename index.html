@@ -504,7 +504,7 @@ function DailyChecklist({jobs}){
 // ═════════════════════════════════════════════════════════════════════════════
 const DEFAULT={name:"",role:"Brand Marketing Manager",location:"Boston, MA",salary:"130000",workType:"Hybrid"};
 
-export default function App(){
+function App(){
   const [step,   setStep]  =useState(0);
   const [prefs,  setPrefs] =useState(()=>LS.getJ("prefs",DEFAULT));
   const [resume, setResume]=useState(()=>LS.get("resume")||"");
