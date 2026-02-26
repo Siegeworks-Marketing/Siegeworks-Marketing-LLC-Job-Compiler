@@ -1,764 +1,308 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com https://api.adzuna.com 'unsafe-inline' 'unsafe-eval'; connect-src https://www.themuse.com https://remotive.com https://jobicy.com https://api.allorigins.win https://corsproxy.io https://www.indeed.com https://jsearch.p.rapidapi.com; img-src 'self' data:; style-src 'self' 'unsafe-inline'; frame-ancestors 'none';">
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Siegeworks | Job Search</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js" crossorigin="anonymous"></script>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Siegeworks Job Compiler</title>
+
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{background:#0D0D0D;color:#fff;font-family:system-ui,"Helvetica Neue",sans-serif}
-::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:#1A1A1A}::-webkit-scrollbar-thumb{background:#8B1A1A;border-radius:3px}
-@keyframes spin{to{transform:rotate(360deg)}}
-@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+body {
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #0f172a;
+  color: #f1f5f9;
+  margin: 0;
+}
+
+header {
+  padding: 40px 20px;
+  text-align: center;
+}
+
+h1 { margin: 0; font-size: 32px; }
+.sub { color: #94a3b8; margin-top: 8px; }
+
+.search-container {
+  max-width: 900px;
+  margin: 20px auto;
+  padding: 20px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+input, textarea {
+  padding: 12px;
+  border-radius: 8px;
+  border: none;
+  font-size: 14px;
+}
+
+input { width: 220px; }
+textarea { width: 100%; max-width: 850px; height: 100px; }
+
+button {
+  padding: 12px 18px;
+  border-radius: 8px;
+  border: none;
+  background: #2563eb;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button:hover { background: #1d4ed8; }
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.results {
+  max-width: 900px;
+  margin: 40px auto;
+  padding: 0 20px;
+}
+
+.job-card {
+  background: #1e293b;
+  padding: 18px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+
+.job-title { font-size: 18px; font-weight: 600; }
+.job-meta { font-size: 13px; color: #94a3b8; margin: 6px 0; }
+.job-score { font-size: 13px; color: #60a5fa; }
+.job-snippet { font-size: 14px; margin-top: 10px; }
+
+.apply-link {
+  display: inline-block;
+  margin-top: 12px;
+  text-decoration: none;
+  color: #60a5fa;
+  font-weight: 500;
+}
 </style>
 </head>
-<body><div id="root"></div>
-<script type="text/babel">
-const { useState, useEffect, useRef } = React;
 
-const C = {
-  black:"#0D0D0D", dark:"#1A1A1A", mid:"#2A2A2A", card:"#141414",
-  red:"#8B1A1A", white:"#FFFFFF", off:"#F5F5F5", slate:"#6B7280", border:"#2E2E2E",
-  priBg:"#1A0A0A", priBdr:"#8B1A1A", priTxt:"#F87171",
-  strBg:"#0A1219", strBdr:"#1E5A8B", strTxt:"#60A5FA",
-  reaBg:"#0F1A0F", reaBdr:"#1E6B3A", reaTxt:"#4ADE80",
-};
+<body>
 
-// ─── LOGOS ────────────────────────────────────────────────────────────────────
-const LOGO_HDR="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";
-const LOGO_ICO="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";
-function SWLogo({h=52}){return <img src={"data:image/png;base64,"+LOGO_HDR} width={Math.round(h*128/90)} height={h} style={{display:"block",objectFit:"contain"}} alt="Siegeworks"/>;}
-function SWIcon({s=24}){return <img src={"data:image/png;base64,"+LOGO_ICO} width={Math.round(s*84/50)} height={s} style={{display:"block",objectFit:"contain"}} alt="SW"/>;}
+<header>
+  <h1>Siegeworks Marketing</h1>
+  <div class="sub">AI-Assisted Multi-Source Job Compiler</div>
+</header>
 
-// ─── STORAGE ──────────────────────────────────────────────────────────────────
-const mem={};
-(function purgeSW(){try{const d=localStorage.getItem("sw_date");if(d&&(Date.now()-new Date(d).getTime())/864e5>7)["sw_jobs","sw_date"].forEach(k=>localStorage.removeItem(k));}catch{}})();
-const LS={
-  get:k=>{try{return localStorage.getItem("sw_"+k);}catch{return mem[k]??null;}},
-  set:(k,v)=>{try{localStorage.setItem("sw_"+k,v);}catch{mem[k]=v;}},
-  del:k=>{try{localStorage.removeItem("sw_"+k);}catch{delete mem[k];}},
-  getJ:(k,fb)=>{try{const v=LS.get(k);return v?JSON.parse(v):fb;}catch{return fb;}},
-  setJ:(k,v)=>LS.set(k,JSON.stringify(v)),
-};
+<div class="search-container">
+  <input id="role" placeholder="Job title" />
+  <input id="location" placeholder="Location or Remote" />
+  <div class="toggle">
+    <input type="checkbox" id="recentOnly" />
+    <label for="recentOnly">Last 7 days only</label>
+  </div>
+  <button onclick="search()">Search</button>
+  <textarea id="resumeText" placeholder="Paste resume text for ranking (optional)"></textarea>
+</div>
 
-function safeUrl(u){if(!u||typeof u!=="string")return"#";const t=u.trim();return(t.startsWith("https://")||t.startsWith("http://"))?t:"#";}
+<div class="results" id="results"></div>
 
-function fetchT(url,ms=9000,opts={}){
-  const ctrl=new AbortController();
-  const t=setTimeout(()=>ctrl.abort(),ms);
-  return fetch(url,{...opts,signal:ctrl.signal}).finally(()=>clearTimeout(t));
+<script>
+
+/* ---------- Utilities ---------- */
+
+function stripHTML(str) {
+  const div = document.createElement("div");
+  div.innerHTML = str;
+  return div.textContent || "";
 }
 
-// ─── days-ago helper ──────────────────────────────────────────────────────────
-function daysAgoFrom(dateStr){
-  const d=new Date(dateStr);
-  return isNaN(d)?5:Math.max(0,Math.floor((Date.now()-d.getTime())/864e5));
+function daysOld(dateStr) {
+  if (!dateStr) return 0;
+  return (Date.now() - new Date(dateStr)) / 86400000;
 }
-function freshLabel(n){return n===0?"Today":n===1?"Yesterday":n+"d ago";}
-function freshTag(n){return n<=1?"today":n<=3?"recent":"older";}
 
-// ═════════════════════════════════════════════════════════════════════════════
-// SOURCE 1 — ADZUNA via JSONP (free key, 100K+ aggregated listings)
-// FIX: removed quotes around role → much broader results
-// ═════════════════════════════════════════════════════════════════════════════
-function fetchAdzuna(role,location,workType,appId,appKey){
-  return new Promise(resolve=>{
-    if(!appId||!appKey){resolve([]);return;}
-    const cb="swaz_"+Date.now();
-    let done=false;
-    const finish=data=>{if(done)return;done=true;const el=document.getElementById(cb);if(el)el.remove();delete window[cb];resolve(data);};
-    window[cb]=data=>{
-      const results=(data.results||[]).map(j=>{
-        const da=j.created?daysAgoFrom(j.created):5;
-        return{id:"az_"+j.id,source:"Adzuna",title:j.title||"",company:j.company?.display_name||"",
-          location:j.location?.display_name||location,url:j.redirect_url||"",
-          snippet:(j.description||"").replace(/\s+/g," ").trim().slice(0,400),
-          salary:j.salary_min&&j.salary_max?"$"+Math.round(j.salary_min/1e3)+"K–$"+Math.round(j.salary_max/1e3)+"K":"",
-          daysAgo:da,freshness:freshTag(da),posted:freshLabel(da)};
-      }).filter(j=>j.title&&j.company&&safeUrl(j.url)!=="#");
-      finish(results);
-    };
-    // FIX: No quotes around role title → broader matching ("Brand Marketing Manager"→Brand Marketing Manager)
-    const loc=workType==="Remote"?"":location;
-    const q=encodeURIComponent(role);
-    const w=encodeURIComponent(loc);
-    const src=`https://api.adzuna.com/v1/api/jobs/us/search/1?app_id=${encodeURIComponent(appId)}&app_key=${encodeURIComponent(appKey)}&what=${q}&where=${w}&results_per_page=25&sort_by=date&max_days_old=14&content-type=application/jsonp&callback=${cb}`;
-    const s=document.createElement("script");
-    s.id=cb;s.src=src;s.onerror=()=>finish([]);
-    document.head.appendChild(s);
-    setTimeout(()=>finish([]),12000);
+function tokenize(text) {
+  return text
+    .toLowerCase()
+    .replace(/[^\w\s]/g, "")
+    .split(/\s+/)
+    .filter(w => w.length > 3);
+}
+
+/* ---------- Resume Ranking ---------- */
+
+function scoreJob(job, resumeText) {
+  if (!resumeText) return 0;
+
+  const resumeWords = tokenize(resumeText);
+  const jobText = (job.title + " " + job.snippet).toLowerCase();
+
+  let score = 0;
+  resumeWords.forEach(word => {
+    if (jobText.includes(word)) score++;
   });
+
+  return score;
 }
 
-// ═════════════════════════════════════════════════════════════════════════════
-// SOURCE 2 — THE MUSE (CORS native, no key)
-// FIX 1: Removed location filter entirely — The Muse uses "City, ST, US" format
-//         and strict location filtering drops to 0 results. Category + scoring handles relevance.
-// FIX 2: Fetch pages 0 AND 1 in parallel → 2× results (40-60 per search)
-// ═════════════════════════════════════════════════════════════════════════════
-async function fetchMuse(role,location,workType){
-  const lower=role.toLowerCase();
-  const catSet=new Set(["Marketing"]);
-  if(lower.includes("brand")||lower.includes("communicat"))catSet.add("Brand & Communications");
-  if(lower.includes("advert"))catSet.add("Advertising");
-  if(lower.includes("content")||lower.includes("copywr")||lower.includes("editorial"))catSet.add("Content");
-  if(lower.includes("social"))catSet.add("Social Media");
-  if(lower.includes("product market"))catSet.add("Product Marketing");
-  if(lower.includes("sales")||lower.includes("account exec"))catSet.add("Sales");
-  if(lower.includes("design")||lower.includes("creative dir"))catSet.add("Design & UX");
-  if(lower.includes("data")||lower.includes("analyt"))catSet.add("Data & Analytics");
-  if(lower.includes("hr")||lower.includes("human res")||lower.includes("talent"))catSet.add("HR & Recruiting");
-  if(lower.includes("financ")||lower.includes("account"))catSet.add("Finance & Banking");
-  const cats=[...catSet].slice(0,3);
-  const catParam=cats.map(c=>"category="+encodeURIComponent(c)).join("&");
-  // FIX: No location filter on The Muse — location names don't match user input format
-  // "Boston, MA" ≠ "Boston, MA, US" which is their canonical format → was returning 0
-  const remoteParam=workType==="Remote"?"&location="+encodeURIComponent("Flexible / Remote")+"&location=Remote":"";
-  // FIX: Fetch 3 pages in parallel for more coverage
-  const pages=await Promise.allSettled([0,1,2].map(async page=>{
-    const url=`https://www.themuse.com/api/public/jobs?${catParam}${remoteParam}&page=${page}&descending=true`;
-    const r=await fetchT(url,9000);
-    if(!r.ok)return[];
-    const data=await r.json();
-    return(data.results||[]).map(j=>{
-      const locs=(j.locations||[]).map(l=>l.name).join(", ");
-      const da=daysAgoFrom(j.publication_date||"");
-      return{id:"mu_"+j.id,source:"The Muse",title:j.name||"",company:j.company?.name||"",
-        location:locs,url:j.refs?.landing_page||"",
-        snippet:(j.contents||"").replace(/<[^>]+>/g," ").replace(/\s{2,}/g," ").trim().slice(0,400),
-        salary:"",daysAgo:da,freshness:freshTag(da),posted:freshLabel(da),
-        levels:(j.levels||[]).map(l=>l.name).join(", ")};
-    }).filter(j=>j.title&&j.company&&safeUrl(j.url)!=="#");
+/* ---------- Sources ---------- */
+
+async function fetchJSON(url) {
+  const r = await fetch(url);
+  if (!r.ok) throw new Error();
+  return r.json();
+}
+
+async function fetchRemotive(role) {
+  const data = await fetchJSON(
+    `https://remotive.com/api/remote-jobs?search=${encodeURIComponent(role)}`
+  );
+
+  return (data.jobs || []).map(j => ({
+    id: "re_" + j.id,
+    source: "Remotive",
+    title: j.title,
+    company: j.company_name,
+    location: "Remote",
+    url: j.url,
+    snippet: stripHTML(j.description).slice(0, 280),
+    date: j.publication_date
   }));
-  const seen=new Set(),all=[];
-  pages.forEach(r=>{if(r.status==="fulfilled")r.value.forEach(j=>{if(!seen.has(j.id)){seen.add(j.id);all.push(j);}});});
-  return all;
 }
 
-// ═════════════════════════════════════════════════════════════════════════════
-// SOURCE 3 — REMOTIVE (CORS native, no key)
-// FIX: Was only enabled for workType==="Remote". Now always enabled.
-//      Remote jobs are valid for anyone open to remote — shown with "Remote" label.
-// ═════════════════════════════════════════════════════════════════════════════
-async function fetchRemotive(role){
-  const lower=role.toLowerCase();
-  let cat="marketing";
-  if(lower.includes("design"))cat="design";
-  else if(lower.includes("data")||lower.includes("analyt"))cat="data";
-  else if(lower.includes("product"))cat="product";
-  else if(lower.includes("sales"))cat="sales";
-  else if(lower.includes("financ")||lower.includes("account"))cat="finance";
-  const r=await fetchT(`https://remotive.com/api/remote-jobs?category=${encodeURIComponent(cat)}&limit=30`,9000);
-  if(!r.ok)throw new Error("Remotive "+r.status);
-  const data=await r.json();
-  return(data.jobs||[]).map(j=>{
-    const da=daysAgoFrom(j.publication_date||"");
-    return{id:"re_"+j.id,source:"Remotive",title:j.title||"",company:j.company_name||"",
-      location:"Remote",url:j.url||"",
-      snippet:(j.description||"").replace(/<[^>]+>/g," ").replace(/\s{2,}/g," ").trim().slice(0,400),
-      salary:j.salary||"",daysAgo:da,freshness:freshTag(da),posted:freshLabel(da)};
-  }).filter(j=>j.title&&j.company&&safeUrl(j.url)!=="#");
-}
+async function fetchJobicy(role) {
+  const data = await fetchJSON(
+    `https://jobicy.com/api/v2/remote-jobs?search=${encodeURIComponent(role)}`
+  );
 
-// ═════════════════════════════════════════════════════════════════════════════
-// SOURCE 4 — JOBICY (CORS native, no key, remote jobs)
-// NEW: Free public API, no auth needed, CORS enabled
-// ═════════════════════════════════════════════════════════════════════════════
-async function fetchJobicy(role){
-  const lower=role.toLowerCase();
-  let tag="marketing";
-  if(lower.includes("design"))tag="design";
-  else if(lower.includes("content")||lower.includes("copywr"))tag="content";
-  else if(lower.includes("sales"))tag="sales";
-  else if(lower.includes("product"))tag="product";
-  const r=await fetchT(`https://jobicy.com/api/v2/remote-jobs?tag=${encodeURIComponent(tag)}&count=20`,9000);
-  if(!r.ok)throw new Error("Jobicy "+r.status);
-  const data=await r.json();
-  return(data.jobs||[]).map(j=>{
-    const da=daysAgoFrom(j.pubDate||"");
-    return{id:"jc_"+j.id,source:"Jobicy",title:j.jobTitle||"",company:j.companyName||"",
-      location:"Remote",url:j.url||"",
-      snippet:(j.jobExcerpt||"").replace(/<[^>]+>/g," ").replace(/\s{2,}/g," ").trim().slice(0,400),
-      salary:j.annualSalaryMin&&j.annualSalaryMax?"$"+Math.round(j.annualSalaryMin/1e3)+"K–$"+Math.round(j.annualSalaryMax/1e3)+"K":"",
-      daysAgo:da,freshness:freshTag(da),posted:freshLabel(da)};
-  }).filter(j=>j.title&&j.company&&safeUrl(j.url)!=="#");
-}
-
-// ═════════════════════════════════════════════════════════════════════════════
-// SOURCE 5 — INDEED RSS (via CORS proxy, best-effort)
-// FIX: corsproxy.io changed format from /?{url} → /?url={url}
-//      Added third proxy as fallback. Expanded 7d → 14d window.
-// ═════════════════════════════════════════════════════════════════════════════
-const PROXIES=[
-  u=>({u:`https://api.allorigins.win/get?url=${encodeURIComponent(u)}`,parse:async r=>(await r.json()).contents}),
-  u=>({u:`https://corsproxy.io/?url=${encodeURIComponent(u)}`,parse:async r=>r.text()}), // FIX: ?url= format
-  u=>({u:`https://corsproxy.io/?${encodeURIComponent(u)}`,parse:async r=>r.text()}), // legacy fallback
-];
-function parseRSS(xml){
-  let doc;try{doc=new DOMParser().parseFromString(xml,"text/xml");}catch{return[];}
-  return Array.from(doc.querySelectorAll("item")).map(item=>{
-    const raw=item.querySelector("title")?.textContent?.trim()||"";
-    const link=item.querySelector("link")?.textContent?.trim()||item.querySelector("guid")?.textContent?.trim()||"";
-    const desc=item.querySelector("description")?.textContent||"";
-    const pub=item.querySelector("pubDate")?.textContent||"";
-    if(!link.includes("indeed.com/viewjob")&&!link.includes("indeed.com/rc/clk"))return null;
-    const parts=raw.split(" - ");
-    const da=daysAgoFrom(pub);
-    if(da>14)return null;
-    const snippet=desc.replace(/<[^>]+>/g," ").replace(/\s+/g," ").trim().slice(0,400);
-    const salM=snippet.match(/\$[\d,]+(?:\s*[-–]\s*\$[\d,]+)?/);
-    return{id:"in_"+(link.split("jk=")[1]?.slice(0,12)||link.slice(-12)),source:"Indeed",
-      title:parts[0]?.trim()||raw,company:parts[1]?.trim()||"",location:parts[2]?.trim()||"",
-      url:link,snippet,salary:salM?salM[0]:"",daysAgo:da,freshness:freshTag(da),posted:freshLabel(da)};
-  }).filter(Boolean);
-}
-async function fetchIndeed(role,location,workType){
-  const loc=workType==="Remote"?"":location;
-  // FIX: Use broader queries (no strict quoting) + run 2 queries in parallel
-  const queries=[
-    {q:`"${role}"`,l:loc},
-    {q:role,l:loc}, // unquoted broader search
-  ];
-  const mkUrl=({q,l})=>{let u=`https://www.indeed.com/rss?q=${encodeURIComponent(q)}&sort=date&fromage=14&limit=20`;if(l)u+="&l="+encodeURIComponent(l);return u;};
-  const tryFetch=async query=>{
-    for(const proxy of PROXIES){
-      try{const p=proxy(mkUrl(query));const r=await fetchT(p.u,8000);if(!r.ok)continue;const txt=await p.parse(r);if(txt&&txt.length>200)return parseRSS(txt);}catch{}
-    }return[];
-  };
-  const res=await Promise.allSettled(queries.map(tryFetch));
-  const seen=new Set(),all=[];
-  res.forEach(r=>{if(r.status!=="fulfilled")return;r.value.forEach(j=>{const k=j.url.split("&")[0];if(!seen.has(k)){seen.add(k);all.push(j);}});});
-  return all;
-}
-
-// ═════════════════════════════════════════════════════════════════════════════
-// SOURCE 6 — JSEARCH via RapidAPI (optional paid key)
-// NEW: Aggregates LinkedIn, Indeed, Glassdoor, ZipRecruiter, Google Jobs
-// Free tier: 10 req/month. Basic: $10/month 500 req.
-// Register: https://rapidapi.com/letscrape-6bRBa3QguO5/api/jsearch
-// ═════════════════════════════════════════════════════════════════════════════
-async function fetchJSearch(role,location,workType,apiKey){
-  if(!apiKey)return[];
-  const query=workType==="Remote"?`${role} remote`:`${role} in ${location}`;
-  const r=await fetchT("https://jsearch.p.rapidapi.com/search?"+new URLSearchParams({
-    query,page:"1",num_pages:"1",date_posted:"week",
-    ...(workType==="Remote"?{is_remote:"true"}:{}),
-  }),12000,{
-    headers:{"X-RapidAPI-Key":apiKey,"X-RapidAPI-Host":"jsearch.p.rapidapi.com"},
-  });
-  if(!r.ok)throw new Error("JSearch "+r.status);
-  const data=await r.json();
-  return(data.data||[]).map(j=>{
-    const da=j.job_posted_at_datetime_utc?daysAgoFrom(j.job_posted_at_datetime_utc):5;
-    const applyUrl=j.job_apply_link||j.job_google_link||"";
-    let salStr="";
-    if(j.job_min_salary&&j.job_max_salary)salStr="$"+Math.round(j.job_min_salary/1e3)+"K–$"+Math.round(j.job_max_salary/1e3)+"K";
-    return{id:"js_"+(j.job_id||Math.random().toString(36).slice(2)),
-      source:"JSearch ("+( j.job_publisher||"Indeed")+")",
-      title:j.job_title||"",company:j.employer_name||"",
-      location:j.job_is_remote?"Remote":[j.job_city,j.job_state].filter(Boolean).join(", ")||j.job_country||"",
-      url:applyUrl,snippet:(j.job_description||"").slice(0,400),
-      salary:salStr,daysAgo:da,freshness:freshTag(da),posted:freshLabel(da)};
-  }).filter(j=>j.title&&j.company&&safeUrl(j.url)!=="#");
-}
-
-// ═════════════════════════════════════════════════════════════════════════════
-// ORCHESTRATOR
-// ═════════════════════════════════════════════════════════════════════════════
-async function searchJobs(cfg,setStatus){
-  const {role,location,workType,adzId,adzKey,jsKey}=cfg;
-  setStatus({phase:"fetching",sources:[],done:false,error:null});
-  const sourceDefs=[
-    ...(adzId&&adzKey?[{name:"Adzuna",icon:"🔵",fn:()=>fetchAdzuna(role,location,workType,adzId,adzKey)}]:[]),
-    ...(jsKey?[{name:"JSearch",icon:"🟤",fn:()=>fetchJSearch(role,location,workType,jsKey)}]:[]),
-    {name:"The Muse",icon:"🟣",fn:()=>fetchMuse(role,location,workType)},
-    {name:"Remotive",icon:"🟢",fn:()=>fetchRemotive(role)},
-    {name:"Jobicy",icon:"🩶",fn:()=>fetchJobicy(role)},
-    {name:"Indeed",icon:"🟠",fn:()=>fetchIndeed(role,location,workType)},
-  ];
-  const settled=await Promise.allSettled(sourceDefs.map(s=>s.fn()));
-  const completed=sourceDefs.map((s,i)=>({
-    name:s.name,icon:s.icon,
-    ok:settled[i].status==="fulfilled",
-    count:settled[i].status==="fulfilled"?settled[i].value.length:0,
-    err:settled[i].status==="rejected"?settled[i].reason?.message:"",
+  return (data.jobs || []).map(j => ({
+    id: "jc_" + j.id,
+    source: "Jobicy",
+    title: j.jobTitle,
+    company: j.companyName,
+    location: "Remote",
+    url: j.url,
+    snippet: j.jobExcerpt || "",
+    date: j.pubDate
   }));
-  setStatus({phase:"scoring",sources:completed,done:false,error:null});
-  const seen=new Set(),all=[];
-  settled.forEach(r=>{if(r.status!=="fulfilled")return;r.value.forEach(j=>{if(!seen.has(j.id)){seen.add(j.id);all.push(j);}});});
-  return{all,completed};
 }
 
-// ═════════════════════════════════════════════════════════════════════════════
-// SCORING
-// ═════════════════════════════════════════════════════════════════════════════
-const STOP=new Set("i me my we our you your he she his her it its they them their and the for with of in to a an is are was were be been being am do did does done have has had will would can could should shall may might must need at by on as or but not from about into this that these those then when where who which how what also just very well both each few more most other some any all".split(" "));
-function extractKW(text){
-  if(!text)return[];
-  const freq={};
-  text.toLowerCase().replace(/[^\w\s]/g," ").split(/\s+/)
-    .filter(w=>w.length>3&&!STOP.has(w)&&!/^\d+$/.test(w))
-    .forEach(w=>{freq[w]=(freq[w]||0)+1;});
-  return Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,80).map(([w])=>w);
-}
-function scoreJob(job,kws,role){
-  const text=`${job.title} ${job.snippet} ${job.company}`.toLowerCase();
-  const target=role.toLowerCase();
-  let s=0;
-  if(job.title.toLowerCase()===target)s+=35;
-  else if(job.title.toLowerCase().includes(target))s+=26;
-  else{const words=target.split(/\s+/).filter(w=>w.length>3);const hits=words.filter(w=>job.title.toLowerCase().includes(w));s+=Math.round((hits.length/Math.max(words.length,1))*18);}
-  if(kws.length>0){let kw=0;kws.forEach(w=>{if(text.includes(w))kw++;});s+=Math.min(40,Math.round((kw/Math.min(kws.length,30))*40));}
-  s+=Math.max(0,10-Math.round(job.daysAgo*1.4));
-  return s;
-}
-function rankJobs(jobs,kws,role){
-  return jobs.map(j=>{const sc=scoreJob(j,kws,role);return{...j,score:sc,tier:sc>=55?"priority":sc>=30?"stretch":"reach"};}).sort((a,b)=>b.score-a.score);
+async function fetchMuse(role) {
+  const data = await fetchJSON(
+    `https://www.themuse.com/api/public/jobs?page=1`
+  );
+
+  return (data.results || [])
+    .filter(j => j.name.toLowerCase().includes(role.toLowerCase()))
+    .map(j => ({
+      id: "mu_" + j.id,
+      source: "The Muse",
+      title: j.name,
+      company: j.company?.name || "",
+      location: (j.locations || []).map(l => l.name).join(", "),
+      url: j.refs?.landing_page,
+      snippet: stripHTML(j.contents).slice(0, 280),
+      date: j.publication_date
+    }));
 }
 
-// ─── CLAUDE PROMPT ────────────────────────────────────────────────────────────
-function buildPrompt(jobs,resume,role){
-  const top=jobs.slice(0,10);
-  const res=resume?.trim()?`MY RESUME:\n${resume.trim().slice(0,2000)}`:"MY RESUME:\n[Add your resume on the Resume step for personalized ranking]";
-  const list=top.map((j,i)=>`${i+1}. ${j.title} · ${j.company} (${j.location||"—"}) · ${j.posted}
-   Source: ${j.source} | Apply: ${j.url}
-   ${j.snippet.slice(0,200)}`).join("\n\n");
-  return `I'm searching for "${role}" roles. Please rank these ${top.length} live listings by fit with my background, give 1-2 sentences reasoning each.\n\n${res}\n\nLIVE LISTINGS (${new Date().toLocaleDateString()}):\n${list}\n\nPlease:\n1. Rank best→worst fit with brief reasoning for each\n2. Flag any where a warm LinkedIn intro would help\n3. Give 2-3 tailored resume bullet suggestions for the #1 match`;
-}
+/* ---------- Filtering ---------- */
 
-// ═════════════════════════════════════════════════════════════════════════════
-// UI PRIMITIVES
-// ═════════════════════════════════════════════════════════════════════════════
-const INP={padding:"0.55rem 0.9rem",borderRadius:6,border:"1px solid #2E2E2E",background:"#2A2A2A",fontSize:"0.88rem",color:"#FFF",outline:"none",fontFamily:"inherit",width:"100%",boxSizing:"border-box"};
-function Field({label,hint,children}){return<div style={{display:"flex",flexDirection:"column",gap:4}}><div><div style={{fontSize:"0.78rem",fontWeight:600,color:C.off,letterSpacing:"0.5px"}}>{label}</div>{hint&&<div style={{fontSize:"0.71rem",color:C.slate,marginTop:2,lineHeight:1.4}}>{hint}</div>}</div>{children}</div>;}
-function TInput({label,hint,value,onChange,placeholder,type,secret}){return<Field label={label} hint={hint}><input type={secret?"password":(type||"text")} value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} style={INP}/></Field>;}
-function TArea({label,hint,value,onChange,placeholder,rows=6}){return<Field label={label} hint={hint}><textarea rows={rows} value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} style={{...INP,resize:"vertical",lineHeight:1.6,fontFamily:"monospace",fontSize:"0.82rem"}}/></Field>;}
-function RedBtn({onClick,children,disabled}){return<button onClick={disabled?null:onClick} style={{padding:"0.55rem 1.3rem",borderRadius:6,fontSize:"0.83rem",fontWeight:700,letterSpacing:"0.5px",cursor:disabled?"not-allowed":"pointer",border:"none",background:disabled?C.mid:C.red,color:disabled?C.slate:C.white}}>{children}</button>;}
-function OutBtn({onClick,children}){return<button onClick={onClick} style={{padding:"0.5rem 1.1rem",borderRadius:6,fontSize:"0.82rem",fontWeight:600,cursor:"pointer",border:"1px solid "+C.border,background:"transparent",color:C.off}}>{children}</button>;}
+function applyFilters(jobs, location, recentOnly) {
+  return jobs.filter(job => {
 
-function StepBar({current}){
-  return<div style={{display:"flex",alignItems:"center",justifyContent:"center",maxWidth:340,margin:"0 auto"}}>
-    {["Setup","Resume","Results"].map((label,i)=>{
-      const active=current>=i;
-      return<div key={label} style={{display:"flex",alignItems:"center",flex:i<2?1:"none"}}>
-        <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:3}}>
-          <div style={{width:26,height:26,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"0.73rem",fontWeight:700,background:active?C.red:C.mid,color:active?C.white:C.slate,border:active?"none":"1px solid "+C.border}}>{i+1}</div>
-          <span style={{fontSize:"0.62rem",textTransform:"uppercase",letterSpacing:"0.5px",color:active?"#FCA5A5":C.slate,whiteSpace:"nowrap"}}>{label}</span>
-        </div>
-        {i<2&&<div style={{flex:1,height:1.5,margin:"0 6px",marginBottom:16,background:current>i?C.red:C.border}}/>}
-      </div>;
-    })}
-  </div>;
-}
+    if (recentOnly && daysOld(job.date) > 7) return false;
 
-function Spinner(){return<div style={{width:46,height:46,borderRadius:"50%",border:"3px solid #2A2A2A",borderTop:"3px solid "+C.red,animation:"spin 0.85s linear infinite"}}/>;}
-
-function SearchPanel({status}){
-  const [dots,setDots]=useState(".");
-  useEffect(()=>{const t=setInterval(()=>setDots(d=>d.length>=3?".":d+"."),500);return()=>clearInterval(t);},[]);
-  const sourceList=status.sources.length>0?status.sources:["Adzuna","The Muse","Remotive","Jobicy","Indeed"].map(n=>({name:n,ok:null}));
-  return<div style={{display:"flex",flexDirection:"column",alignItems:"center",padding:"3.5rem 2rem",gap:20,textAlign:"center"}}>
-    <Spinner/>
-    <div style={{fontSize:"1.1rem",fontWeight:700}}>{status.phase==="fetching"?`Fetching live listings${dots}`:`Scoring by resume fit${dots}`}</div>
-    <div style={{display:"flex",gap:8,flexWrap:"wrap",justifyContent:"center"}}>
-      {sourceList.map((s,i)=><div key={s.name||i} style={{display:"flex",alignItems:"center",background:C.mid,borderRadius:20,padding:"0.3rem 0.85rem",fontSize:"0.78rem",color:s.ok===null?C.slate:s.ok?C.off:"#F87171"}}>
-        <span style={{display:"inline-block",width:8,height:8,borderRadius:"50%",background:s.ok===null?"transparent":s.ok?"#4ADE80":"#F87171",border:s.ok===null?"2px solid "+C.red:"none",borderTopColor:s.ok===null?"transparent":"none",animation:s.ok===null?"spin 0.8s linear infinite":"none",marginRight:6}}/>
-        {s.name}{s.ok&&s.count>0&&<span style={{marginLeft:5,color:"#4ADE80",fontWeight:700}}>{s.count}</span>}
-      </div>)}
-    </div>
-    <div style={{background:"#1A0808",border:"1px solid "+C.red+"44",color:"#FCA5A5",padding:"0.55rem 1.1rem",borderRadius:6,fontSize:"0.78rem",maxWidth:400}}>Real job APIs · No hallucinated listings · Ranked by resume keyword match</div>
-  </div>;
-}
-
-// ─── API KEY SETUP CARD ───────────────────────────────────────────────────────
-function ApiCard({title,badge,sub,link,fields,saved,onSave,onClear,accentColor="#60A5FA",accentBorder="#1E5A8B",accentBg="#0A0F1A"}){
-  const [vals,setVals]=useState(()=>Object.fromEntries(fields.map(f=>[f.key,""])));
-  const [open,setOpen]=useState(false);
-  function upd(k,v){setVals(p=>({...p,[k]:v}));}
-  const allFilled=fields.every(f=>vals[f.key].trim());
-  return<div style={{background:accentBg,border:"1px solid "+accentBorder,borderRadius:10,padding:"1.2rem 1.4rem",marginBottom:"1rem"}}>
-    <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:12,flexWrap:"wrap",marginBottom:saved&&!open?0:"0.7rem"}}>
-      <div>
-        <div style={{fontWeight:700,color:C.white,fontSize:"0.9rem",marginBottom:3}}>{title} <span style={{fontSize:"0.72rem",fontWeight:500,color:accentColor,marginLeft:6}}>{badge}</span></div>
-        <div style={{fontSize:"0.77rem",color:C.slate,lineHeight:1.5}}>Free registration at <a href={link} target="_blank" rel="noreferrer" style={{color:accentColor}}>{link.replace("https://","")}</a> — {sub}</div>
-      </div>
-      <button onClick={()=>setOpen(o=>!o)} style={{fontSize:"0.77rem",padding:"0.28rem 0.75rem",borderRadius:5,cursor:"pointer",border:"1px solid "+accentBorder,background:"transparent",color:accentColor,whiteSpace:"nowrap"}}>
-        {open?"Hide":"Set up →"}
-      </button>
-    </div>
-    {open&&<div style={{display:"flex",flexDirection:"column",gap:10,marginTop:4}}>
-      {fields.map(f=><TInput key={f.key} label={f.label} secret={f.secret} placeholder={f.placeholder} value={vals[f.key]} onChange={v=>upd(f.key,v)}/>)}
-      <div style={{fontSize:"0.73rem",color:"#6B7280",background:C.mid,borderRadius:5,padding:"0.55rem 0.75rem",lineHeight:1.5}}>⚠ Keys are saved in this browser only and never sent to any server by this tool. However, anyone with access to this browser could find them. Do not enter keys on a shared or work computer.</div>
-      <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-        <RedBtn onClick={()=>{onSave(fields.reduce((acc,f)=>({...acc,[f.key]:vals[f.key].trim()}),{}));setOpen(false);}} disabled={!allFilled}>Save</RedBtn>
-        {saved&&<button onClick={()=>{onClear();setVals(Object.fromEntries(fields.map(f=>[f.key,""])));setOpen(false);}} style={{padding:"0.4rem 0.85rem",borderRadius:5,fontSize:"0.78rem",cursor:"pointer",border:"1px solid #8B1A1A55",background:"transparent",color:"#F87171"}}>Remove</button>}
-      </div>
-    </div>}
-    {saved&&!open&&<div style={{fontSize:"0.75rem",color:"#4ADE80",marginTop:3}}>✓ Saved and active</div>}
-  </div>;
-}
-
-// ─── CLAUDE MODAL ─────────────────────────────────────────────────────────────
-function ClaudeModal({jobs,resume,role,onClose}){
-  const ref=useRef(null);
-  const [copied,setCopied]=useState(false);
-  const prompt=buildPrompt(jobs,resume,role);
-  function copy(){if(!ref.current)return;ref.current.select();try{document.execCommand("copy");}catch{}setCopied(true);setTimeout(()=>setCopied(false),2500);}
-  return<div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.88)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:"1.5rem"}}>
-    <div onClick={e=>e.stopPropagation()} style={{background:C.dark,borderRadius:10,padding:"1.6rem",maxWidth:700,width:"100%",border:"1px solid "+C.red,boxShadow:"0 0 40px rgba(139,26,26,0.3)",display:"flex",flexDirection:"column",gap:14}}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
-        <div>
-          <div style={{fontWeight:700,fontSize:"1rem",color:C.white,marginBottom:4}}>Analyze Fit with Claude AI</div>
-          <div style={{fontSize:"0.8rem",color:C.slate}}>No API key needed here · Copy prompt → open Claude.ai → paste</div>
-        </div>
-        <button onClick={onClose} style={{background:C.mid,border:"none",color:C.white,width:30,height:30,borderRadius:"50%",cursor:"pointer",fontSize:"1rem"}}>×</button>
-      </div>
-      <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-        {["① Copy prompt","② Open Claude.ai","③ Paste & analyze"].map((s,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:6,background:C.mid,borderRadius:6,padding:"0.4rem 0.7rem",fontSize:"0.77rem",color:C.off}}><span style={{color:C.red,fontWeight:700}}>→</span>{s}</div>)}
-      </div>
-      <textarea ref={ref} readOnly value={prompt} style={{background:C.black,border:"1px solid "+C.border,borderRadius:6,padding:"0.9rem 1rem",fontFamily:"monospace",fontSize:"0.74rem",color:"#FCA5A5",lineHeight:1.75,resize:"vertical",minHeight:220,outline:"none",width:"100%",boxSizing:"border-box"}}/>
-      <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
-        <RedBtn onClick={copy}>{copied?"✓ Copied!":"Copy Prompt"}</RedBtn>
-        <button onClick={()=>window.open("https://claude.ai/new","_blank")} style={{padding:"0.5rem 1.1rem",borderRadius:6,fontSize:"0.82rem",fontWeight:600,cursor:"pointer",border:"1px solid #4A90D9",background:"#0A1929",color:"#60B8E8"}}>Open Claude.ai ↗</button>
-      </div>
-      <div style={{fontSize:"0.74rem",color:C.slate,borderTop:"1px solid "+C.border,paddingTop:10,lineHeight:1.5}}>
-        <strong style={{color:C.off}}>Privacy:</strong> Prompt includes your resume excerpt and job snippets. Sent only when you paste it into Claude.ai under your own account — this tool never sends your resume to any server.
-      </div>
-    </div>
-  </div>;
-}
-
-// ─── JOB CARD ─────────────────────────────────────────────────────────────────
-const TIER={priority:{bg:C.priBg,bdr:C.priBdr,clr:C.priTxt,label:"Best Match"},stretch:{bg:C.strBg,bdr:C.strBdr,clr:C.strTxt,label:"Good Match"},reach:{bg:C.reaBg,bdr:C.reaBdr,clr:C.reaTxt,label:"Worth Exploring"}};
-const FRESH={today:{dot:"🔴",clr:"#F87171",bg:"#1A0808"},recent:{dot:"🟡",clr:"#FCD34D",bg:"#1A1500"},older:{dot:"⚪",clr:"#6B7280",bg:"#141414"}};
-const SRC_CLR={
-  "Adzuna":{bg:"#0A0F1A",clr:"#60A5FA",bdr:"#1E5A8B"},
-  "JSearch":{bg:"#0D0A1A",clr:"#A78BFA",bdr:"#4C1D95"},
-  "The Muse":{bg:"#0A0A1A",clr:"#818CF8",bdr:"#3730A3"},
-  "Remotive":{bg:"#0A1A0A",clr:"#4ADE80",bdr:"#166534"},
-  "Jobicy":{bg:"#0A1A0A",clr:"#6EE7B7",bdr:"#065F46"},
-  "Indeed":{bg:"#1A0A00",clr:"#FB923C",bdr:"#9A3412"},
-};
-function getSourceColor(src){for(const k in SRC_CLR)if(src.startsWith(k))return SRC_CLR[k];return{bg:C.mid,clr:C.slate,bdr:C.border};}
-
-function JobCard({job,num}){
-  const t=TIER[job.tier]||TIER.reach;
-  const f=FRESH[job.freshness]||FRESH.older;
-  const sc=getSourceColor(job.source);
-  const liSearch="https://www.linkedin.com/jobs/search/?keywords="+encodeURIComponent('"'+job.title+'" "'+job.company+'"')+"&sortBy=DD";
-  const liConn="https://www.linkedin.com/search/results/people/?keywords="+encodeURIComponent(job.company)+"&network=%5B%22F%22%2C%22S%22%5D";
-  return<div style={{background:C.card,border:"1px solid "+C.border,borderLeft:"3px solid "+t.bdr,borderRadius:8,padding:"1.1rem 1.3rem",animation:"fadeIn 0.3s ease"}}>
-    <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:8,alignItems:"center"}}>
-      <span style={{fontSize:"0.67rem",fontWeight:700,padding:"0.18rem 0.55rem",borderRadius:3,background:t.bg,color:t.clr,border:"1px solid "+t.bdr+"55",textTransform:"uppercase",letterSpacing:"0.7px"}}>{t.label}</span>
-      <span style={{fontSize:"0.67rem",fontWeight:700,padding:"0.18rem 0.5rem",borderRadius:3,background:f.bg,color:f.clr,border:"1px solid "+f.clr+"33"}}>{f.dot} {job.posted}</span>
-      <span style={{fontSize:"0.66rem",padding:"0.18rem 0.5rem",borderRadius:3,background:sc.bg,color:sc.clr,border:"1px solid "+sc.bdr+"55"}}>via {job.source}</span>
-      <span style={{fontSize:"0.68rem",color:C.slate,marginLeft:"auto"}}>#{String(num).padStart(2,"0")}{job.score>0&&<span style={{marginLeft:5,color:C.off}}>· {Math.min(job.score,99)}</span>}</span>
-    </div>
-    <div style={{display:"flex",gap:"1rem",alignItems:"flex-start",flexWrap:"wrap"}}>
-      <div style={{flex:1,minWidth:200}}>
-        <div style={{fontSize:"1.05rem",fontWeight:700,color:C.white,marginBottom:2}}>{job.title}</div>
-        <div style={{fontSize:"0.87rem",fontWeight:600,color:C.red,marginBottom:6}}>{job.company}{job.location?" · "+job.location:""}</div>
-        {job.salary&&<div style={{fontSize:"0.78rem",color:"#4ADE80",marginBottom:6,fontWeight:600}}>💰 {job.salary}</div>}
-        {job.levels&&<div style={{fontSize:"0.74rem",color:C.slate,marginBottom:4}}>{job.levels}</div>}
-        <p style={{fontSize:"0.8rem",color:C.slate,lineHeight:1.55,margin:0}}>{job.snippet.slice(0,280)}{job.snippet.length>280?"…":""}</p>
-      </div>
-      <div style={{display:"flex",flexDirection:"column",gap:7,minWidth:142}}>
-        <a href={safeUrl(job.url)} target="_blank" rel="noreferrer" style={{display:"block",padding:"0.55rem 0.8rem",borderRadius:6,fontSize:"0.8rem",fontWeight:700,textAlign:"center",textDecoration:"none",background:C.red,color:C.white}}>Apply Now ↗</a>
-        <a href={liSearch} target="_blank" rel="noreferrer" style={{display:"block",padding:"0.42rem 0.8rem",borderRadius:6,fontSize:"0.74rem",fontWeight:600,textAlign:"center",textDecoration:"none",background:"#0A1929",border:"1px solid #0077B555",color:"#60B8E8"}}>LinkedIn Search ↗</a>
-        <a href={liConn} target="_blank" rel="noreferrer" style={{display:"block",padding:"0.42rem 0.8rem",borderRadius:6,fontSize:"0.74rem",fontWeight:600,textAlign:"center",textDecoration:"none",background:"#0A1929",border:"1px solid #0077B533",color:"#93C5FD"}}>🔗 Find Connections</a>
-      </div>
-    </div>
-  </div>;
-}
-
-// ─── DAILY CHECKLIST ──────────────────────────────────────────────────────────
-function DailyChecklist({jobs}){
-  const [checked,setChecked]=useState({});
-  const priority=jobs.filter(j=>j.tier==="priority").slice(0,3);
-  const fixed=[
-    {id:"apply",text:"Apply to all Best Match roles via Apply Now button — use the cover letter tip from Claude"},
-    {id:"li",text:"Find Connections at every Best Match company — 1st + 2nd degree"},
-    {id:"dms",text:"Send 1–2 warm DMs to connections — ask for a 15-min conversation, not a job"},
-    {id:"engage",text:"Comment thoughtfully on 2–3 posts from hiring managers at target companies"},
-    {id:"log",text:"Log every application: company · role · date · contact · follow-up date"},
-  ];
-  function toggle(id){setChecked(p=>({...p,[id]:!p[id]}));}
-  function Row(id,content){const done=!!checked[id];return<div key={id} onClick={()=>toggle(id)} style={{display:"flex",alignItems:"flex-start",gap:10,background:C.card,border:"1px solid "+(done?C.mid:C.border),borderRadius:6,padding:"0.7rem 0.95rem",cursor:"pointer",opacity:done?0.45:1}}>
-    <div style={{width:16,height:16,borderRadius:3,flexShrink:0,marginTop:2,background:done?C.red:"transparent",border:done?"none":"2px solid "+C.border,display:"flex",alignItems:"center",justifyContent:"center"}}>{done&&<span style={{color:C.white,fontSize:10,fontWeight:700}}>✓</span>}</div>
-    <div style={{fontSize:"0.83rem",lineHeight:1.4,color:done?C.slate:C.off,textDecoration:done?"line-through":"none"}}>{content}</div>
-  </div>;}
-  return<div style={{display:"flex",flexDirection:"column",gap:7}}>
-    <p style={{fontSize:"0.82rem",color:C.slate,marginBottom:4}}>Click to check off. Best Match roles auto-populate at top.</p>
-    {priority.map((j,i)=>Row("p"+i,<span><strong style={{color:C.white}}>Apply · {j.company}</strong> — {j.title} · {j.posted}</span>))}
-    {fixed.map(r=>Row(r.id,r.text))}
-    <button onClick={()=>setChecked({})} style={{alignSelf:"flex-start",marginTop:4,padding:"0.35rem 0.85rem",background:"transparent",border:"1px solid "+C.border,borderRadius:5,fontSize:"0.76rem",cursor:"pointer",color:C.slate}}>Reset</button>
-  </div>;
-}
-
-// ═════════════════════════════════════════════════════════════════════════════
-// APP
-// ═════════════════════════════════════════════════════════════════════════════
-const DEFAULT={name:"",role:"Brand Marketing Manager",location:"Boston, MA",salary:"130000",workType:"Hybrid"};
-
-function App(){
-  const [step,   setStep]  =useState(0);
-  const [prefs,  setPrefs] =useState(()=>LS.getJ("prefs",DEFAULT));
-  const [resume, setResume]=useState(()=>LS.get("resume")||"");
-  const [adzId,  setAdzId] =useState(()=>LS.get("adzId")||"");
-  const [adzKey, setAdzKey]=useState(()=>LS.get("adzKey")||"");
-  const [jsKey,  setJsKey] =useState(()=>LS.get("jsKey")||"");
-  const [jobs,   setJobs]  =useState(()=>LS.getJ("jobs",[]));
-  const [status, setStatus]=useState({phase:"idle",sources:[],done:false,error:null});
-  const [lastDate,setLD]   =useState(()=>LS.get("date")||"");
-  const [tab,    setTab]   =useState("jobs");
-  const [claude, setClaude]=useState(false);
-
-  useEffect(()=>{if(jobs.length>0)setStep(2);},[]);
-
-  function pref(k,v){setPrefs(p=>{const n={...p,[k]:v};LS.setJ("prefs",n);return n;});}
-  function upResume(v){setResume(v);LS.set("resume",v);}
-
-  async function runSearch(){
-    setStep(2);setStatus({phase:"fetching",sources:[],done:false,error:null});setJobs([]);LS.del("jobs");
-    try{
-      const {all,completed}=await searchJobs({role:prefs.role,location:prefs.location,workType:prefs.workType,adzId,adzKey,jsKey},setStatus);
-      const kws=extractKW(resume);
-      const ranked=rankJobs(all,kws,prefs.role);
-      const now=new Date().toLocaleString("en-US",{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"});
-      setJobs(ranked);setLD(now);LS.setJ("jobs",ranked);LS.set("date",now);
-      setStatus({phase:"done",sources:completed,done:true,error:null});
-    }catch(err){
-      setStatus({phase:"error",sources:[],done:false,error:err.message||"Search failed"});
+    if (location && location.toLowerCase() !== "remote") {
+      if (!job.location.toLowerCase().includes(location.toLowerCase()))
+        return false;
     }
+
+    return true;
+  });
+}
+
+function dedupe(jobs) {
+  const seen = new Set();
+  return jobs.filter(j => {
+    const key = (j.title + j.company + j.location).toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+/* ---------- Rendering ---------- */
+
+function render(jobs) {
+  const container = document.getElementById("results");
+  container.innerHTML = "";
+
+  if (!jobs.length) {
+    container.innerHTML = "<p>No results found.</p>";
+    return;
   }
 
-  function clearAll(){["resume","prefs","jobs","date","adzId","adzKey","jsKey"].forEach(k=>LS.del(k));setResume("");setPrefs(DEFAULT);setJobs([]);setLD("");setStep(0);setAdzId("");setAdzKey("");setJsKey("");setStatus({phase:"idle",sources:[],done:false,error:null});}
-  function reset(){setJobs([]);setStep(0);setStatus({phase:"idle",sources:[],done:false,error:null});setLD("");LS.del("jobs");LS.del("date");}
+  jobs.forEach(job => {
+    const card = document.createElement("div");
+    card.className = "job-card";
 
-  const loading=status.phase==="fetching"||status.phase==="scoring";
-
-  const MANUAL=[
-    {label:"LinkedIn Jobs",desc:"Last 2 weeks · exact title · date sorted",url:`https://www.linkedin.com/jobs/search/?keywords=${encodeURIComponent('"'+prefs.role+'"')}&location=${encodeURIComponent(prefs.location)}&f_TPR=r1209600&sortBy=DD`,note:"Browser block — manual only"},
-    {label:"BuiltIn",desc:"Tech & startup companies",url:`https://builtin.com/jobs?search=${encodeURIComponent(prefs.role)}`,note:"Browser block — manual only"},
-    {label:"Google Jobs",desc:"Aggregates all major boards",url:`https://www.google.com/search?q=%22${encodeURIComponent(prefs.role)}%22+jobs+%22${encodeURIComponent(prefs.location)}%22&ibp=htl;jobs`,note:"Browser block — manual only"},
-    {label:"Glassdoor",desc:"Last 7 days · salary data",url:`https://www.glassdoor.com/Job/jobs.htm?typedKeyword=${encodeURIComponent(prefs.role)}&fromAge=7`,note:"Browser block — manual only"},
-    {label:"Wellfound",desc:"Startups · equity data",url:`https://wellfound.com/jobs?role=${encodeURIComponent(prefs.role.replace(/ /g,"-").toLowerCase())}`,note:"Browser block — manual only"},
-    {label:"ZipRecruiter",desc:`Min salary filter applied`,url:`https://www.ziprecruiter.com/Jobs/${encodeURIComponent(prefs.role).replace(/%20/g,"-")}?salary_minimum=${prefs.salary||"130000"}`,note:"Browser block — manual only"},
-  ];
-
-  const totalFound=jobs.length;
-  const sourceOk=status.sources.filter(s=>s.ok&&s.count>0);
-
-  return<div style={{fontFamily:'system-ui,"Helvetica Neue",sans-serif',background:C.black,minHeight:"100vh"}}>
-
-    {/* HEADER */}
-    <div style={{background:C.dark,borderBottom:"1px solid "+C.red,padding:"1.1rem 1.5rem 0.9rem",position:"sticky",top:0,zIndex:100}}>
-      <div style={{maxWidth:1000,margin:"0 auto"}}>
-        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"0.9rem",flexWrap:"wrap",gap:10}}>
-          <div style={{display:"flex",alignItems:"center",gap:14}}>
-            <SWLogo h={52}/>
-            <div style={{borderLeft:"1px solid "+C.border,paddingLeft:14}}>
-              <div style={{fontSize:"1rem",fontWeight:700,color:C.white,letterSpacing:"0.5px"}}>Job Search Assistant</div>
-              <div style={{fontSize:"0.71rem",color:C.slate,marginTop:1}}>The Muse · Remotive · Jobicy · Indeed · Adzuna (optional) · JSearch (optional)</div>
-            </div>
-          </div>
-          <div style={{textAlign:"right"}}>
-            <div style={{fontSize:"0.64rem",color:C.slate,letterSpacing:"1px",textTransform:"uppercase",marginBottom:2}}>Analysis via</div>
-            <div style={{fontSize:"0.7rem",color:C.red,fontWeight:600}}>Claude AI ↗</div>
-          </div>
-        </div>
-        <StepBar current={step}/>
+    card.innerHTML = `
+      <div class="job-title">${job.title}</div>
+      <div class="job-meta">
+        ${job.company} | ${job.location} | ${job.source}
       </div>
-    </div>
+      <div class="job-score">Match Score: ${job.score}</div>
+      <div class="job-snippet">${job.snippet}</div>
+      <a class="apply-link" href="${job.url}" target="_blank">
+        Apply →
+      </a>
+    `;
 
-    <div style={{maxWidth:1000,margin:"0 auto",padding:"1.6rem 1.2rem 5rem"}}>
-
-      {/* ─── STEP 0: SETUP ─────────────────────────────────────────────────── */}
-      {step===0&&<div style={{maxWidth:600,margin:"0 auto",display:"flex",flexDirection:"column",gap:16}}>
-        {/* Free sources note */}
-        <div style={{background:"#0F1A0F",border:"1px solid #1E6B3A44",borderRadius:10,padding:"1rem 1.3rem"}}>
-          <div style={{fontWeight:700,color:C.white,fontSize:"0.88rem",marginBottom:6}}>📡 Live Sources (no key needed)</div>
-          <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-            {[{n:"🟣 The Muse",d:"Marketing & creative roles"},{n:"🟢 Remotive",d:"Remote jobs"},{n:"🩶 Jobicy",d:"Remote jobs"},{n:"🟠 Indeed",d:"All roles via RSS"}].map(s=><div key={s.n} style={{background:C.card,border:"1px solid "+C.border,borderRadius:6,padding:"0.4rem 0.7rem"}}>
-              <div style={{fontSize:"0.78rem",fontWeight:600,color:C.off}}>{s.n}</div>
-              <div style={{fontSize:"0.7rem",color:C.slate}}>{s.d}</div>
-            </div>)}
-          </div>
-          <div style={{marginTop:8,fontSize:"0.76rem",color:"#4ADE80",lineHeight:1.5}}>✓ These fire automatically on every search — no setup needed</div>
-        </div>
-
-        {/* Adzuna optional */}
-        <ApiCard
-          title="Adzuna" badge="+100K US listings · aggregates 100+ job boards" sub="No credit card · 1,000 free searches/day"
-          link="https://developer.adzuna.com/signup"
-          fields={[{key:"appId",label:"App ID",placeholder:"e.g. a1b2c3d4",secret:false},{key:"appKey",label:"App Key",placeholder:"Your app_key",secret:true}]}
-          saved={!!(adzId&&adzKey)}
-          onSave={({appId,appKey})=>{setAdzId(appId);setAdzKey(appKey);LS.set("adzId",appId);LS.set("adzKey",appKey);}}
-          onClear={()=>{setAdzId("");setAdzKey("");LS.del("adzId");LS.del("adzKey");}}
-        />
-
-        {/* JSearch optional */}
-        <ApiCard
-          title="JSearch (RapidAPI)" badge="Pulls from LinkedIn · Indeed · Glassdoor · ZipRecruiter" sub="10 free searches/month · Basic plan $10/month"
-          link="https://rapidapi.com/letscrape-6bRBa3QguO5/api/jsearch"
-          fields={[{key:"jsKey",label:"RapidAPI Key",placeholder:"Your X-RapidAPI-Key",secret:true}]}
-          saved={!!jsKey}
-          onSave={({jsKey:k})=>{setJsKey(k);LS.set("jsKey",k);}}
-          onClear={()=>{setJsKey("");LS.del("jsKey");}}
-          accentColor="#A78BFA" accentBorder="#4C1D95" accentBg="#0D0A1A"
-        />
-
-        {/* Search criteria */}
-        <div style={{background:C.dark,border:"1px solid "+C.border,borderRadius:10,padding:"1.8rem"}}>
-          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:"0.4rem"}}>
-            <div style={{width:3,height:20,background:C.red,borderRadius:2}}/>
-            <h2 style={{fontSize:"1.1rem",fontWeight:700,color:C.white}}>Search Criteria</h2>
-          </div>
-          <p style={{fontSize:"0.82rem",color:C.slate,margin:"0 0 1.5rem",lineHeight:1.5}}>Be specific with your role title — it's used in every query.</p>
-          <div style={{display:"flex",flexDirection:"column",gap:16}}>
-            <TInput label="Your Name" value={prefs.name} onChange={v=>pref("name",v)} placeholder="e.g. Alex Johnson"/>
-            <TInput label="Target Role / Job Title" hint='Tip: "Brand Marketing Manager" finds more than just "Marketing Manager"' value={prefs.role} onChange={v=>pref("role",v)} placeholder="e.g. Brand Marketing Manager"/>
-            <TInput label="Location" value={prefs.location} onChange={v=>pref("location",v)} placeholder="e.g. Boston, MA"/>
-            <TInput label="Minimum Salary (USD)" hint="Used in manual search links" type="number" value={prefs.salary} onChange={v=>pref("salary",v)} placeholder="130000"/>
-            <div>
-              <div style={{fontSize:"0.78rem",fontWeight:600,color:C.off,marginBottom:8,letterSpacing:"0.5px"}}>Work Type</div>
-              <div style={{display:"flex",gap:7,flexWrap:"wrap"}}>
-                {["Hybrid","Remote","On-site","Any"].map(w=>{const sel=prefs.workType===w;return<button key={w} onClick={()=>pref("workType",w)} style={{padding:"0.38rem 1rem",borderRadius:5,fontSize:"0.8rem",fontWeight:600,cursor:"pointer",background:sel?C.red:C.mid,color:sel?C.white:C.slate,border:sel?"none":"1px solid "+C.border}}>{w}</button>;})}
-              </div>
-            </div>
-          </div>
-          <div style={{display:"flex",justifyContent:"flex-end",marginTop:"1.8rem"}}>
-            <RedBtn onClick={()=>setStep(1)} disabled={!prefs.role||!prefs.location}>Next: Add Resume →</RedBtn>
-          </div>
-        </div>
-      </div>}
-
-      {/* ─── STEP 1: RESUME ────────────────────────────────────────────────── */}
-      {step===1&&!loading&&<div style={{maxWidth:580,margin:"0 auto"}}>
-        <div style={{background:C.dark,border:"1px solid "+C.border,borderRadius:10,padding:"2rem"}}>
-          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:"0.4rem"}}>
-            <div style={{width:3,height:20,background:C.red,borderRadius:2}}/>
-            <h2 style={{fontSize:"1.1rem",fontWeight:700,color:C.white}}>Add Your Resume</h2>
-          </div>
-          <p style={{fontSize:"0.82rem",color:C.slate,margin:"0 0 0.5rem",lineHeight:1.5}}>Used locally to rank listings by keyword overlap. Also pre-fills the Claude analysis prompt.</p>
-          <p style={{fontSize:"0.74rem",color:"#F87171",margin:"0 0 1.2rem",fontStyle:"italic"}}>Stored in this browser only — never sent to any server. Clear anytime with "Clear my data" in the footer.</p>
-          <TArea label="Resume (plain text)" hint="Copy text from Word, PDF, or LinkedIn summary" value={resume} onChange={upResume} placeholder="Paste your resume here (optional — tool works without it)…" rows={10}/>
-          <div style={{display:"flex",justifyContent:"space-between",marginTop:"1.8rem",gap:8,flexWrap:"wrap"}}>
-            <OutBtn onClick={()=>setStep(0)}>← Back</OutBtn>
-            <div style={{display:"flex",gap:8}}>
-              <OutBtn onClick={runSearch}>Skip → Search</OutBtn>
-              <RedBtn onClick={runSearch}>🔍 Find Live Jobs →</RedBtn>
-            </div>
-          </div>
-        </div>
-      </div>}
-
-      {/* LOADING */}
-      {loading&&<SearchPanel status={status}/>}
-
-      {/* ─── STEP 2: RESULTS ───────────────────────────────────────────────── */}
-      {step===2&&!loading&&<div>
-
-        {/* Summary bar */}
-        <div style={{background:C.dark,border:"1px solid "+C.border,borderRadius:10,padding:"1.2rem 1.5rem",marginBottom:"1.2rem",display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:10}}>
-          <div>
-            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:4,flexWrap:"wrap"}}>
-              <span style={{fontSize:"1rem",fontWeight:700,color:C.white}}>{totalFound} Listings Found</span>
-              {sourceOk.map(s=><span key={s.name} style={{fontSize:"0.72rem",fontWeight:700,color:"#4ADE80",background:"#0F1A0F",padding:"0.2rem 0.55rem",borderRadius:3,border:"1px solid #1E6B3A55"}}>{s.icon} {s.name} ({s.count})</span>)}
-            </div>
-            <div style={{fontSize:"0.77rem",color:C.slate}}>{lastDate&&"Fetched "+lastDate+" · "}{resume?"Ranked by resume keyword match":"Add resume for better ranking"}</div>
-          </div>
-          <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-            <button onClick={()=>setClaude(true)} style={{padding:"0.5rem 1.1rem",borderRadius:6,fontSize:"0.82rem",fontWeight:600,cursor:"pointer",border:"1px solid "+C.red+"88",background:"#1A0808",color:"#FCA5A5"}}>✦ Analyze with Claude</button>
-            <OutBtn onClick={runSearch}>↺ Refresh</OutBtn>
-            <OutBtn onClick={reset}>← New Search</OutBtn>
-          </div>
-        </div>
-
-        {/* No results notice */}
-        {totalFound===0&&<div style={{background:"#1A1200",border:"1px solid #FCD34D44",borderRadius:8,padding:"0.9rem 1.1rem",marginBottom:"1rem",fontSize:"0.82rem",color:"#FCD34D",lineHeight:1.65}}>
-          <strong style={{color:C.off}}>No results loaded.</strong> This can happen in sandboxed preview environments where outbound API calls are blocked. The tool should return 30–80+ listings when running on GitHub Pages. Use the <strong>Manual Search</strong> tab as a fallback.
-        </div>}
-
-        {/* Source failure detail */}
-        {status.sources.some(s=>!s.ok)&&<div style={{background:"#1A0808",border:"1px solid "+C.red+"44",borderRadius:8,padding:"0.7rem 1rem",marginBottom:"1rem",fontSize:"0.77rem",color:"#FCA5A5",lineHeight:1.55}}>
-          ⚠ Some sources failed: {status.sources.filter(s=>!s.ok).map(s=>s.name).join(", ")}. Results shown are from working sources only.
-        </div>}
-
-        {/* Tabs */}
-        <div style={{display:"flex",gap:4,marginBottom:"1.2rem",borderBottom:"1px solid "+C.border,overflowX:"auto"}}>
-          {[{id:"jobs",label:`Results (${totalFound})`},{id:"manual",label:"Manual Search"},{id:"check",label:"Daily Checklist"},{id:"sources",label:"Source Guide"}].map(t=>{
-            const active=tab===t.id;
-            return<button key={t.id} onClick={()=>setTab(t.id)} style={{padding:"0.55rem 1rem",fontSize:"0.81rem",fontWeight:600,cursor:"pointer",background:"transparent",border:"none",borderBottom:active?"2px solid "+C.red:"2px solid transparent",color:active?C.white:C.slate,whiteSpace:"nowrap"}}>{t.label}</button>;
-          })}
-        </div>
-
-        {tab==="jobs"&&<div style={{display:"flex",flexDirection:"column",gap:12}}>
-          {totalFound===0&&<div style={{textAlign:"center",padding:"3rem",color:C.slate,fontSize:"0.88rem"}}>No listings loaded yet. Click Refresh or use Manual Search.</div>}
-          {jobs.map((j,i)=><JobCard key={j.id} job={j} num={i+1}/>)}
-        </div>}
-
-        {tab==="manual"&&<div>
-          <div style={{background:"#1A0808",border:"1px solid "+C.red+"44",borderRadius:8,padding:"0.8rem 1.1rem",marginBottom:"1rem",fontSize:"0.8rem",color:"#FCA5A5",lineHeight:1.55}}>
-            <strong style={{color:C.off}}>Why these can't be auto-fetched:</strong> LinkedIn, BuiltIn, Glassdoor, and Google Jobs block all browser-based cross-origin requests. No public CORS API exists. LinkedIn's official API is write-only (for posting jobs, not searching them) and requires a paid partnership agreement. These smart links open pre-filled searches with your exact role title.
-          </div>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(250px,1fr))",gap:10}}>
-            {MANUAL.map(m=><a key={m.label} href={m.url} target="_blank" rel="noreferrer" style={{display:"block",background:C.card,border:"1px solid "+C.border,borderRadius:8,padding:"0.9rem 1.1rem",textDecoration:"none"}}>
-              <div style={{fontWeight:700,color:C.white,fontSize:"0.88rem",marginBottom:3}}>{m.label}</div>
-              <div style={{fontSize:"0.75rem",color:C.slate,marginBottom:4}}>{m.desc}</div>
-              <div style={{fontSize:"0.69rem",color:"#F87171"}}>{m.note}</div>
-            </a>)}
-          </div>
-        </div>}
-
-        {tab==="check"&&<DailyChecklist jobs={jobs}/>}
-
-        {tab==="sources"&&<div style={{display:"flex",flexDirection:"column",gap:14,maxWidth:660}}>
-          {[
-            {n:"🟣 The Muse",tag:"No key · CORS API · Auto",body:"Marketing, creative, brand, content, and business roles at established companies. Free public API that supports browser-level CORS. Returns 40–60 jobs per search across 3 category pages. Location filtering removed (was causing 0 results because 'Boston, MA' ≠ 'Boston, MA, US' — their canonical format). Resume scoring handles location relevance."},
-            {n:"🟢 Remotive",tag:"No key · CORS API · Auto",body:"Remote-first roles in marketing, design, product, sales, and more. Free public API, CORS enabled. Now runs on every search regardless of work type — useful for anyone open to remote options."},
-            {n:"🩶 Jobicy",tag:"No key · CORS API · Auto · NEW",body:"Remote job board with structured data including salary ranges. Free public API, CORS enabled. Returns up to 20 jobs per category per search."},
-            {n:"🟠 Indeed",tag:"No key · RSS via proxy · Auto",body:"Broadest US job coverage. Fetched via Indeed's public RSS feed through a CORS proxy. Two queries run in parallel (exact + broad) for better coverage. Proxy availability varies — fails silently when proxies are down, other sources compensate."},
-            {n:"🔵 Adzuna",tag:"Free key · JSONP · Optional",body:"Aggregates 100+ job boards including company career pages, news job sections, and staffing agencies. JSONP bypasses CORS entirely by loading results as a script tag. Free registration gives 1,000 searches/day. Register at developer.adzuna.com/signup."},
-            {n:"🟤 JSearch",tag:"RapidAPI key · Optional · Gets LinkedIn",body:"Aggregates LinkedIn, Indeed, Glassdoor, and ZipRecruiter via RapidAPI. The only practical way to pull LinkedIn listings directly into a browser app without LinkedIn's partner API. Free tier: 10 searches/month. Basic plan: $10/month for 500 searches. Register at rapidapi.com/letscrape-6bRBa3QguO5/api/jsearch."},
-            {n:"⚫ LinkedIn / BuiltIn / Google Jobs",tag:"Manual only · CORS blocked",body:"These platforms block all cross-origin browser requests. LinkedIn's official Job Posting API is write-only for employers and requires a paid partnership. Scraping violates their ToS. Smart pre-configured search links are in the Manual Search tab."},
-          ].map(s=><div key={s.n} style={{display:"flex",gap:12}}>
-            <div style={{width:3,flexShrink:0,background:C.red,borderRadius:2,marginTop:3}}/>
-            <div>
-              <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap",marginBottom:4}}>
-                <span style={{fontWeight:700,color:C.white,fontSize:"0.85rem"}}>{s.n}</span>
-                <span style={{fontSize:"0.7rem",color:C.slate,background:C.mid,padding:"0.15rem 0.45rem",borderRadius:3}}>{s.tag}</span>
-              </div>
-              <div style={{fontSize:"0.81rem",color:C.slate,lineHeight:1.6}}>{s.body}</div>
-            </div>
-          </div>)}
-          <div style={{background:"#1A0808",border:"1px solid "+C.red+"44",borderRadius:8,padding:"0.9rem 1.1rem",marginTop:4}}>
-            <div style={{fontWeight:700,color:"#FCA5A5",fontSize:"0.85rem",marginBottom:6}}>Why no AI for job search?</div>
-            <div style={{fontSize:"0.81rem",color:C.slate,lineHeight:1.65}}>LLMs hallucinate job listings — they generate plausible-sounding company names, titles, and URLs that don't exist. Every "Apply Now" link comes directly from a source API. Claude is only used for the optional resume-vs-listing analysis, run in your own Claude.ai account under your own credentials.</div>
-          </div>
-        </div>}
-
-      </div>}
-    </div>
-
-    {/* FOOTER */}
-    <div style={{borderTop:"1px solid "+C.border,background:C.dark,padding:"1rem 1.5rem",display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:8}}>
-      <div style={{display:"flex",alignItems:"center",gap:10}}><SWIcon s={26}/><span style={{fontSize:"0.73rem",color:C.slate}}>Siegeworks Marketing LLC</span></div>
-      <div style={{display:"flex",alignItems:"center",gap:14,flexWrap:"wrap"}}>
-        <span style={{fontSize:"0.72rem",color:C.slate}}>The Muse · Remotive · Jobicy · Indeed · AI analysis via Claude.ai</span>
-        <button onClick={clearAll} title="Removes resume, preferences, and API keys from browser storage" style={{fontSize:"0.7rem",color:"#F87171",background:"transparent",border:"1px solid #8B1A1A55",borderRadius:4,padding:"0.2rem 0.6rem",cursor:"pointer"}}>Clear my data</button>
-      </div>
-    </div>
-
-    {claude&&<ClaudeModal jobs={jobs} resume={resume} role={prefs.role} onClose={()=>setClaude(false)}/>}
-  </div>;
+    container.appendChild(card);
+  });
 }
 
-ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+/* ---------- Main ---------- */
+
+async function search() {
+  const role = document.getElementById("role").value.trim();
+  const location = document.getElementById("location").value.trim();
+  const recentOnly = document.getElementById("recentOnly").checked;
+  const resumeText = document.getElementById("resumeText").value;
+
+  if (!role) return;
+
+  const container = document.getElementById("results");
+  container.innerHTML = "<p>Searching live listings...</p>";
+
+  const results = await Promise.allSettled([
+    fetchRemotive(role),
+    fetchJobicy(role),
+    fetchMuse(role)
+  ]);
+
+  let jobs = results
+    .filter(r => r.status === "fulfilled")
+    .flatMap(r => r.value);
+
+  jobs = dedupe(jobs);
+  jobs = applyFilters(jobs, location, recentOnly);
+
+  jobs.forEach(j => {
+    j.score = scoreJob(j, resumeText);
+  });
+
+  jobs.sort((a, b) =>
+    resumeText ? b.score - a.score : new Date(b.date) - new Date(a.date)
+  );
+
+  render(jobs);
+}
+
 </script>
+
 </body>
 </html>
